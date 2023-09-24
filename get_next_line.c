@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   get_next_line.c                                    :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: lpastor- <lpastor-@student.42madrid>       +#+  +:+       +#+        */
+/*   By: marvin <marvin@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/09/22 07:54:18 by lpastor-          #+#    #+#             */
-/*   Updated: 2023/09/22 11:14:47 by lpastor-         ###   ########.fr       */
+/*   Updated: 2023/09/24 19:55:56 by marvin           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,6 +14,7 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include "get_next_line.h"
+#include "colores.h"
 
 #ifndef BUFFER_SIZE
 # define BUFFER_SIZE 1
@@ -29,7 +30,6 @@ char	*add_data(char *data, char *input)
 	index_data = 0;
 	index_input = 0;
 	index_res = 0;
-
 	while (data && data[index_data])
 		index_data++;
 	while (input[index_input])
@@ -45,6 +45,7 @@ char	*add_data(char *data, char *input)
 		res[index_res++] = input[index_input++];
 	free(data);
 	free(input);
+	res[index_res] = '\0';
 	return (res);
 }
 
@@ -66,8 +67,42 @@ char	*find_ch(char *data, char ch)
 	if (!res)
 		return (NULL);
 	while (data[index] && index < length && data[index] != ch)
+	{
 		res[index] = data[index];
+		index++;
+	}
 	res[index] = '\0';
+	return (res);
+}
+
+char	*remove_line(char *data)
+{
+	size_t	index;
+	size_t	length;
+	size_t	start;
+	char	*res;
+
+	index = 0;
+	if (!data)
+		return (NULL);
+	while (data[index] && data[index] != '\n')
+		index++;
+	if (!data[index])
+		return (NULL);
+	index++;
+	length = index;
+	while (data[length])
+		length++;
+	start = index;
+	res = (char *) malloc(length);
+	if (!res)
+		return (res);
+	while (index < length)
+	{
+		res[index - start] = data[index];
+		index++;
+	}
+	res[index - start] = '\0';
 	return (res);
 }
 
@@ -97,33 +132,53 @@ char	*find_ch(char *data, char ch)
 
 char	*get_next_line(int fd)
 {
-	/*static char	*data;
-	char		*memory;*/
+	static char	*data;
+	char		*memory;
 	char		*temp;
 	size_t		length;
 
 	if (fd < 0 || read(fd, 0, 0))
 		return (NULL);
 
-/*	memory = search_saved(data);
+	memory = search_saved(data);
 	if (memory)
-		return (memory);*/
-
-	printf("BUFFER_SIZE: %d\n", BUFFER_SIZE);
-	temp = (char *) malloc(BUFFER_SIZE + 1);
-	if (!temp)
-		return (NULL);
-	length = read(fd, temp, BUFFER_SIZE);
-	temp[length] = '\0';
-	printf("# %zu\n", length);
-	printf(">>> %s\n", temp);
-	/*data = add_data(data, temp);
-	if (!data)
-		return (NULL);
-	memory = find_ch(data, '\n');*/
-//		if (memory)
-//			break;
-
-	//return (memory);
-	return (NULL);
+		return (memory);
+	while (1)
+	{
+		temp = (char *) malloc(BUFFER_SIZE + 1);
+		if (!temp)
+			return (NULL);
+		length = read(fd, temp, BUFFER_SIZE);
+		temp[length] = '\0';
+		if (length != BUFFER_SIZE)
+		{
+			printf("%sF%s\n", COLOR_RED, COLOR_RESET);
+			memory = find_ch(data, '\n');
+			if (memory)
+			{
+				data = remove_line(data);
+				if (!data)
+					return (data);
+				return (memory);
+			}
+			else
+				return (data);
+		}
+		// printf("# %zu\n", length);
+		printf("%s========LEIDO:========%s\n%s\n%s======================%s\n", COLOR_CYAN, COLOR_RESET, temp, COLOR_CYAN, COLOR_RESET);
+		data = add_data(data, temp);
+		if (!data)
+			return (NULL);
+		printf("%s=========DATA=========%s\n%s\n%s======================%s\n", COLOR_CYAN, COLOR_RESET, data, COLOR_CYAN, COLOR_RESET);
+		memory = find_ch(data, '\n');
+		printf("%s=========LINE=========%s\n%s\n%s======================%s\n", COLOR_LIGHTGREEN, COLOR_RESET, memory, COLOR_LIGHTGREEN, COLOR_RESET);
+		if (memory)
+			data = remove_line(data);
+		printf("%s=========DATA=========%s\n%s\n%s======================%s\n", COLOR_LIGHTGREEN, COLOR_RESET, data, COLOR_LIGHTGREEN, COLOR_RESET);
+		if (memory)
+			break;
+		printf("\n\n");
+	}
+	return (memory);
+	// return (NULL);
 }
