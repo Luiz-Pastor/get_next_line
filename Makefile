@@ -12,14 +12,22 @@ all: $(NAME)
 
 $(NAME): $(OBJ) tests.o
 	$(CC) $^ -o $(NAME)
+	
 
 %.o: %.c
 	$(CC) $(FLAGS) -c $<
 
 ###############################################
+t: re
+	./$(NAME)
+
+v: re
+	@valgrind --leak-check=full ./$(NAME)
+
+###############################################
 
 clean:
-	@rm -rf $(OBJ)
+	@rm -rf $(OBJ) tests.o
 
 fclean: clean
 	@rm -rf $(NAME)
