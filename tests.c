@@ -4,7 +4,7 @@
 #include <fcntl.h>
 #include "get_next_line.h"
 
-#define DEFAULT_FILE "test1.txt"
+#define DEFAULT_FILE "files/empty"
 
 void	my_wait(void)
 {
@@ -19,9 +19,6 @@ int main(int argc, char *argv[])
 	char *line;
 	char *filename;
 
-	char *aux = (char *) malloc(1);
-	aux[0] = '\0';
-	line = aux;
 
 	if (argc < 2)
 		filename = DEFAULT_FILE;
@@ -38,11 +35,10 @@ int main(int argc, char *argv[])
 	// line = get_next_line(fd);
 	// printf("\t> Linea 2:\n");
 	// printf("%s\n", line);
-	while (line)
-	{
-		free(line);
-		line = get_next_line(fd);
-		printf("%s\n", line);
-		my_wait();
-	}
+	line = get_next_line(fd);
+	printf("> %s\n", line);
+	free(line);
+	line = get_next_line(fd);
+	printf("> %s\n", line);
+	free(line);
 }
