@@ -6,7 +6,7 @@
 /*   By: lpastor- <lpastor-@student.42madrid>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/09/22 07:54:18 by lpastor-          #+#    #+#             */
-/*   Updated: 2023/09/25 09:23:11 by lpastor-         ###   ########.fr       */
+/*   Updated: 2023/09/25 14:26:06 by lpastor-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -88,7 +88,7 @@ char	*remove_line(char *data)
 	while (data[index] && data[index] != '\n')
 		index++;
 	if (!data[index])
-		return (free(data), NULL);
+		return (NULL);
 	index++;
 	length = index;
 	start = index;
@@ -120,12 +120,14 @@ char	*get_next_line(int fd)
 	if (memory)
 	{
 		data = remove_line(data);
+		if (!data)
+			return (data);
 		//printf("%s=========DATA=========%s\n%s\n%s======================%s\n", COLOR_CYAN, COLOR_RESET, data, COLOR_CYAN, COLOR_RESET);
 		return (memory);
 	}
 	while (1)
 	{
-		temp = (char *) malloc(BUFFER_SIZE + 1);
+		/*temp = (char *) malloc(BUFFER_SIZE + 1);
 		if (!temp)
 			return (NULL);
 		length = read(fd, temp, BUFFER_SIZE);
@@ -135,7 +137,8 @@ char	*get_next_line(int fd)
 			return (NULL);
 		if (length != BUFFER_SIZE)
 		{
-			//printf("%sF%s\n", COLOR_RED, COLOR_RESET);
+			printf("%sF%s\n", COLOR_RED, COLOR_RESET);
+			printf("%s=========DATA=========%s\n%s\n%s======================%s\n", COLOR_CYAN, COLOR_RESET, data, COLOR_CYAN, COLOR_RESET);
 			memory = find_ch(data, '\n');
 			if (memory)
 			{
@@ -145,13 +148,14 @@ char	*get_next_line(int fd)
 				return (memory);
 			}
 			else
-			{
-				if (!data)
-					return (NULL);
-				return data;
-			}
-				
-		}
+				return (data);			
+		}*/
+		temp = (char *) malloc((BUFFER_SIZE + 1) * sizeof(char));
+		if (!temp)
+			return (NULL);
+		length = read(fd, temp, BUFFER_SIZE);
+		temp[length] = '\0';
+		data = add_data(data, temp);
 		// printf("# %zu\n", length);
 		//printf("%s========LEIDO:========%s\n%s\n%s======================%s\n", COLOR_CYAN, COLOR_RESET, temp, COLOR_CYAN, COLOR_RESET);
 		//printf("%s=========DATA=========%s\n%s\n%s======================%s\n", COLOR_CYAN, COLOR_RESET, data, COLOR_CYAN, COLOR_RESET);
