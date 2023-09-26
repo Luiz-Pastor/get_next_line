@@ -6,168 +6,155 @@
 /*   By: lpastor- <lpastor-@student.42madrid>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/09/22 07:54:18 by lpastor-          #+#    #+#             */
-/*   Updated: 2023/09/25 14:26:06 by lpastor-         ###   ########.fr       */
+/*   Updated: 2023/09/26 11:49:59 by lpastor-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include <stdio.h>
 #include <unistd.h>
-#include <stdlib.h>
+#include <string.h>
 #include "get_next_line.h"
-#include "colores.h"
 
 #ifndef BUFFER_SIZE
 # define BUFFER_SIZE 1
 #endif
 
-char	*add_data(char *data, char *input)
+char	*add_line(char *data, char *add)
 {
-	size_t	index_data;
-	size_t	index_input;
-	size_t	index_res;
-	char	*res;
+	char	*new;
+	size_t	index_in;
+	size_t	index_new;
 
-	index_data = 0;
-	index_input = 0;
-	index_res = 0;
-	while (data && data[index_data])
-		index_data++;
-	while (input[index_input])
-		index_input++;
-	res = (char *) malloc(index_data + index_input + 1);
-	if (!res)
+	index_in = 0;
+	index_new = 0;
+	if (!data)
+		new = (char *) malloc(gnl_strlen(add) + 1);
+	else
+		new = (char *) malloc(gnl_strlen(data) + gnl_strlen(add) + 1);
+	if (!new)
 		return (NULL);
-	index_data = 0;
-	index_input = 0;
-	while (data && data[index_data])
-		res[index_res++] = data[index_data++];
-	while (input[index_input])
-		res[index_res++] = input[index_input++];
-	free(data);
-	free(input);
-	res[index_res] = '\0';
-	return (res);
+	while (data && data[index_in])
+		new[index_new++] = data[index_in++];
+	index_in = 0;
+	while (add[index_in])
+		new[index_new++] = add[index_in++];
+	new[index_new] = '\0';
+	if (data)
+		free(data);
+	free(add);
+	return (new);
 }
 
-char	*find_ch(char *data, char ch)
+char	*get_line(char *data)
 {
-	size_t	length;
+	char	*line;
 	size_t	index;
-	char	*res;
-	
-	index = 0;
-	length = 0;
+
+	index = 1;
 	if (!data)
 		return (NULL);
-	while (data[length] && data[length] != ch)
-		length++;
-	if (!data[length])
-		return (NULL);
-	res = (char *) malloc(length + 1);
-	if (!res)
-		return (NULL);
-	while (data[index] && index < length && data[index] != ch)
-	{
-		res[index] = data[index];
+	while (data[index - 1] && data[index - 1] != '\n')
 		index++;
-	}
-	res[index] = '\0';
-	return (res);
-}
-
-char	*remove_line(char *data)
-{
-	size_t	index;
-	size_t	length;
-	size_t	start;
-	char	*res;
-
-	index = 0;
-	if (!data)
+	if (!data[index - 1])
 		return (NULL);
+	line = (char *) malloc(index);
+	if (!line)
+		return (NULL);
+	index = 0;
 	while (data[index] && data[index] != '\n')
-		index++;
-	if (!data[index])
-		return (NULL);
-	index++;
-	length = index;
-	start = index;
-	while (data[length])
-		length++;
-	res = (char *) malloc(length);
-	if (!res)
-		return (res);
-	while (index < length)
 	{
-		res[index - start] = data[index];
+		line[index] = data[index];
 		index++;
 	}
-	res[index - start] = '\0';
-	return (res);
+	line[index] = '\n';
+	line[index + 1] = '\0';
+	return (line);
+}
+
+char	*delete_line(char *data)
+{
+	char	*new;
+	size_t	index_data;
+	size_t	index_new;
+	size_t	count;
+
+	index_data = 1;
+	index_new = 0;
+	if (!data)
+		return (NULL);
+	while (data[index_data - 1] && data[index_data - 1] != '\n')
+		index_data++;
+	if (!data[index_data - 1])
+		return (data);
+	count = gnl_strlen(data) - index_data;
+	if (!count)
+	{
+		//free(data);
+		//return (NULL);
+		return (gnl_free((void **)&data));
+	}
+	new = (char *) malloc(count + 1);
+	if (!new)
+		return (NULL);
+	while (data[index_data])
+		new[index_new++] = data[index_data++];
+	new[index_new] = '\0';
+	free(data);
+	return (new);
+}
+
+char	*read_file(int fd, char *data)
+{
+	char	*temp;
+	size_t	length;
+
+	while (1)
+	{
+		temp = (char *) malloc(BUFFER_SIZE + 1);
+		if (!temp)
+			return (NULL);
+		length = read(fd, temp, BUFFER_SIZE);
+		temp[length] = '\0';
+		if (length == 0)
+		{
+			free(temp);
+			return (data);
+		}
+		data = add_line(data, temp);
+		if (!data)
+			return (NULL);
+		if (gnl_find_ch(data, '\n'))
+			return (data);
+	}
+	return (NULL);
 }
 
 char	*get_next_line(int fd)
 {
 	static char	*data;
-	char		*memory;
-	char		*temp;
-	size_t		length;
+	char		*line;
 
 	if (fd < 0 || read(fd, 0, 0))
 		return (NULL);
-
-	memory = find_ch(data, '\n');
-	if (memory)
+	if (gnl_find_ch(data, '\n'))
 	{
-		data = remove_line(data);
-		if (!data)
-			return (data);
-		//printf("%s=========DATA=========%s\n%s\n%s======================%s\n", COLOR_CYAN, COLOR_RESET, data, COLOR_CYAN, COLOR_RESET);
-		return (memory);
+		line = get_line(data);
+		data = delete_line(data);
+		return (line);
 	}
-	while (1)
+	data = read_file(fd, data);
+	if (gnl_find_ch(data, '\n'))
 	{
-		/*temp = (char *) malloc(BUFFER_SIZE + 1);
-		if (!temp)
-			return (NULL);
-		length = read(fd, temp, BUFFER_SIZE);
-		temp[length] = '\0';
-		data = add_data(data, temp);
-		if (!data)
-			return (NULL);
-		if (length != BUFFER_SIZE)
-		{
-			printf("%sF%s\n", COLOR_RED, COLOR_RESET);
-			printf("%s=========DATA=========%s\n%s\n%s======================%s\n", COLOR_CYAN, COLOR_RESET, data, COLOR_CYAN, COLOR_RESET);
-			memory = find_ch(data, '\n');
-			if (memory)
-			{
-				data = remove_line(data);
-				if (!data)
-					return (data);
-				return (memory);
-			}
-			else
-				return (data);			
-		}*/
-		temp = (char *) malloc((BUFFER_SIZE + 1) * sizeof(char));
-		if (!temp)
-			return (NULL);
-		length = read(fd, temp, BUFFER_SIZE);
-		temp[length] = '\0';
-		data = add_data(data, temp);
-		// printf("# %zu\n", length);
-		//printf("%s========LEIDO:========%s\n%s\n%s======================%s\n", COLOR_CYAN, COLOR_RESET, temp, COLOR_CYAN, COLOR_RESET);
-		//printf("%s=========DATA=========%s\n%s\n%s======================%s\n", COLOR_CYAN, COLOR_RESET, data, COLOR_CYAN, COLOR_RESET);
-		memory = find_ch(data, '\n');
-		//printf("%s=========LINE=========%s\n%s\n%s======================%s\n", COLOR_LIGHTGREEN, COLOR_RESET, memory, COLOR_LIGHTGREEN, COLOR_RESET);
-		if (memory)
-			data = remove_line(data);
-		//printf("%s=========DATA=========%s\n%s\n%s======================%s\n", COLOR_LIGHTGREEN, COLOR_RESET, data, COLOR_LIGHTGREEN, COLOR_RESET);
-		if (memory)
-			break;
-		//printf("\n\n");
+		line = get_line(data);
+		data = delete_line(data);
+		return (line);
 	}
-	return (memory);
-	// return (NULL);
+	line = gnl_cpy(data);
+	if (data)
+	{
+		//free(data);
+		//data = NULL;
+		gnl_free((void **)&data);
+	}
+	return (line);
 }
