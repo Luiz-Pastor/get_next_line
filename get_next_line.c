@@ -3,23 +3,20 @@
 /*                                                        :::      ::::::::   */
 /*   get_next_line.c                                    :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: lpastor- <lpastor-@student.42madrid>       +#+  +:+       +#+        */
+/*   By: marvin <marvin@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/09/22 07:54:18 by lpastor-          #+#    #+#             */
-/*   Updated: 2023/09/26 11:49:59 by lpastor-         ###   ########.fr       */
+/*   Updated: 2023/09/26 22:59:41 by marvin           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include <stdio.h>
-#include <unistd.h>
-#include <string.h>
 #include "get_next_line.h"
 
 #ifndef BUFFER_SIZE
 # define BUFFER_SIZE 1
 #endif
 
-char	*add_line(char *data, char *add)
+static char	*add_line(char *data, char *add)
 {
 	char	*new;
 	size_t	index_in;
@@ -45,7 +42,7 @@ char	*add_line(char *data, char *add)
 	return (new);
 }
 
-char	*get_line(char *data)
+static char	*get_line(char *data)
 {
 	char	*line;
 	size_t	index;
@@ -57,7 +54,7 @@ char	*get_line(char *data)
 		index++;
 	if (!data[index - 1])
 		return (NULL);
-	line = (char *) malloc(index);
+	line = (char *) malloc(index + 1);
 	if (!line)
 		return (NULL);
 	index = 0;
@@ -71,7 +68,7 @@ char	*get_line(char *data)
 	return (line);
 }
 
-char	*delete_line(char *data)
+static char	*delete_line(char *data)
 {
 	char	*new;
 	size_t	index_data;
@@ -89,8 +86,8 @@ char	*delete_line(char *data)
 	count = gnl_strlen(data) - index_data;
 	if (!count)
 	{
-		//free(data);
-		//return (NULL);
+		free(data);
+		return (NULL);
 		return (gnl_free((void **)&data));
 	}
 	new = (char *) malloc(count + 1);
@@ -103,7 +100,7 @@ char	*delete_line(char *data)
 	return (new);
 }
 
-char	*read_file(int fd, char *data)
+static char	*read_file(int fd, char *data)
 {
 	char	*temp;
 	size_t	length;
