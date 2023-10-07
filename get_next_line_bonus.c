@@ -3,37 +3,14 @@
 /*                                                        :::      ::::::::   */
 /*   get_next_line_bonus.c                              :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: lpastor- <lpastor-@student.42madrid>       +#+  +:+       +#+        */
+/*   By: marvin <marvin@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/09/22 07:54:18 by lpastor-          #+#    #+#             */
-/*   Updated: 2023/09/27 11:03:13 by lpastor-         ###   ########.fr       */
+/*   Updated: 2023/10/07 23:16:22 by marvin           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "get_next_line_bonus.h"
-
-static char	*add_line(char *data, char *add)
-{
-	char	*new;
-	size_t	index_in;
-	size_t	index_new;
-
-	index_in = 0;
-	index_new = 0;
-	new = (char *) malloc(gnl_strlen(data) + gnl_strlen(add) + 1);
-	if (!new)
-		return (NULL);
-	while (data && data[index_in])
-		new[index_new++] = data[index_in++];
-	index_in = 0;
-	while (add[index_in])
-		new[index_new++] = add[index_in++];
-	new[index_new] = '\0';
-	if (data)
-		free(data);
-	free(add);
-	return (new);
-}
 
 static char	*get_line(char *data)
 {
@@ -81,33 +58,33 @@ static char	*delete_line(char *data)
 		return (gnl_free((void **)&data));
 	new = (char *) malloc(count + 1);
 	if (!new)
-		return (NULL);
+		return (gnl_free((void **)&data));
 	while (data[index_data])
 		new[index_new++] = data[index_data++];
 	new[index_new] = '\0';
-	free(data);
+	gnl_free((void **)&data);
 	return (new);
 }
 
 static char	*read_file(int fd, char **data)
 {
 	char	*temp;
-	size_t	length;
+	long	length;
 
 	while (1)
 	{
 		temp = (char *) malloc(BUFFER_SIZE + 1);
 		if (!temp)
-			return (NULL);
+			return (gnl_free((void **)data));
 		length = read(fd, temp, BUFFER_SIZE);
-		temp[length] = '\0';
 		if (length == 0)
 		{
-			free(temp);
+			gnl_free((void **)&temp);
 			return (*data);
 		}
 		if (length < 0)
-			return (gnl_free((void **)data));
+			return (gnl_free((void **)temp), gnl_free((void **)data));
+		temp[length] = '\0';
 		*data = add_line(*data, temp);
 		if (!*data)
 			return (NULL);
@@ -117,28 +94,31 @@ static char	*read_file(int fd, char **data)
 	return (NULL);
 }
 
+static char	*change_data(char **data)
+{
+	char	*line;
+
+	line = get_line(*data);
+	if (!line && (*data))
+		return (gnl_free((void **)data));
+	(*data) = delete_line(*data);
+	return (line);
+}
+
 char	*get_next_line(int fd)
 {
-	static char	*data[MAX_FD];
+	static char	*data[GNL_MAX_FD];
 	char		*line;
 
-	if (fd < 0 || read(fd, 0, 0))
+	if (fd < 0 || read(fd, 0, 0) || BUFFER_SIZE < 1)
 		return (gnl_free((void **)&data[fd]));
 	if (gnl_find_ch(data[fd], '\n'))
-	{
-		line = get_line(data[fd]);
-		data[fd] = delete_line(data[fd]);
-		return (line);
-	}
+		return (change_data(&data[fd]));
 	data[fd] = read_file(fd, &data[fd]);
+	if (!data[fd])
+		return (NULL);
 	if (gnl_find_ch(data[fd], '\n'))
-	{
-		line = get_line(data[fd]);
-		data[fd] = delete_line(data[fd]);
-		return (line);
-	}
+		return (change_data(&data[fd]));
 	line = gnl_cpy(data[fd]);
-	if (data[fd])
-		gnl_free((void **)&data[fd]);
-	return (line);
+	return (gnl_free((void **)&data[fd]), line);
 }
