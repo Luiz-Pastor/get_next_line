@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   get_next_line_utils.c                              :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: lpastor- <lpastor-@student.42madrid>       +#+  +:+       +#+        */
+/*   By: marvin <marvin@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/09/22 08:02:16 by lpastor-          #+#    #+#             */
-/*   Updated: 2023/09/26 11:47:14 by lpastor-         ###   ########.fr       */
+/*   Updated: 2023/10/07 23:12:04 by marvin           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -65,4 +65,30 @@ void	*gnl_free(void **memory)
 	free(*memory);
 	*memory = NULL;
 	return (NULL);
+}
+
+char	*add_line(char *data, char *add)
+{
+	char	*new;
+	size_t	index_in;
+	size_t	index_new;
+
+	index_in = 0;
+	index_new = 0;
+	new = (char *) malloc(gnl_strlen(data) + gnl_strlen(add) + 1);
+	if (!new)
+	{
+		gnl_free((void **)&add);
+		return (gnl_free((void **)&data));
+	}
+	while (data && data[index_in])
+		new[index_new++] = data[index_in++];
+	index_in = 0;
+	while (add[index_in])
+		new[index_new++] = add[index_in++];
+	new[index_new] = '\0';
+	if (data)
+		gnl_free((void **)&data);
+	gnl_free((void **)&add);
+	return (new);
 }
